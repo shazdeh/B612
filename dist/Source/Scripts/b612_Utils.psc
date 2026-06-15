@@ -21,4 +21,6 @@ Form Function GetOwnerOfIndex(Int aiIndex) Global Native
 
 Int Function GetItemCountAtIndex(Int aiIndex) Global Native
 
+Int Function CountStolenAtIndex(Int aiIndex) Global Native
+
 String Function GetFormEditorIDAtIndex(Int aiIndex) Global Native

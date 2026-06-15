@@ -85,7 +85,7 @@ EndFunction
 ; @param strArg Item Name
 ; @param numArg Index of item inside InventoryMenu
 Event OnSelect(string eventName, string strArg, float numArg, Form formArg)
-    SelectedForm = GetItemByIndex(numArg as Int)
+    SelectedForm = GetFormAtIndex(numArg as Int)
     If bAutoClose
         CloseMenu(sParentMenu)
     EndIf

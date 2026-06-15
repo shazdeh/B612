@@ -76,6 +76,23 @@ int GetItemCountAtIndex(StaticFunctionTag*, int index) {
     return 1;
 }
 
+int CountStolenAtIndex(StaticFunctionTag*, int index) {
+    auto entryData = GetEntryDataAtIndex(index);
+    if (!entryData) return 0;
+    int total = 0;
+    auto extraLists = entryData->extraLists;
+    if (extraLists) {
+        TESForm* player = TESForm::LookupByID(0x7);
+        for (auto& xList : *extraLists) {
+            auto owner = xList ? xList->GetOwner() : nullptr;
+            if (owner && owner != player) {
+                total++;
+            }
+        }
+    }
+    return total;
+}
+
 #undef GetObject
 
 TESForm* GetFormAtIndex(StaticFunctionTag*, int index) {
@@ -105,6 +122,7 @@ bool PapyrusBinder(BSScript::IVirtualMachine* vm) {
     vm->RegisterFunction("GetFormAtIndex", scriptName, GetFormAtIndex);
     vm->RegisterFunction("SetOwnerOfIndex", scriptName, SetOwnerOfIndex);
     vm->RegisterFunction("GetOwnerOfIndex", scriptName, GetOwnerOfIndex);
+    vm->RegisterFunction("CountStolenAtIndex", scriptName, CountStolenAtIndex);
     vm->RegisterFunction("GetItemCountAtIndex", scriptName, GetItemCountAtIndex);
     vm->RegisterFunction("GetFormEditorIDAtIndex", scriptName, GetFormEditorIDAtIndex);
     vm->RegisterFunction("UpdateInventoryMenu", scriptName, UpdateInventoryMenu);
