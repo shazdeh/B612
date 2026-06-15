@@ -1,0 +1,2 @@
+Scriptname B612_VirtualKeyboardScript extends Quest
+

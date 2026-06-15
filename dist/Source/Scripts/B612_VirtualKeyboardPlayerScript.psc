@@ -1,0 +1,2 @@
+Scriptname B612_VirtualKeyboardPlayerScript extends ReferenceAlias  
+
