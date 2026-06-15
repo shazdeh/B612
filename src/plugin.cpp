@@ -1,4 +1,5 @@
 #include "logger.h"
+#include "ClibUtil/editorID.hpp"
 
 void OpenMenu(StaticFunctionTag*, std::string a_menuName) {
     if (const auto UIMsgQueue = RE::UIMessageQueue::GetSingleton(); UIMsgQueue) {
@@ -26,18 +27,73 @@ SpellItem* GetSpellByIndex(StaticFunctionTag*, int a_index) {
     return nullptr;
 }
 
-TESForm* GetItemByIndex(StaticFunctionTag*, int a_index) {
-    if (const auto ui = UI::GetSingleton(); ui) {
-        if (const auto menu = ui->GetMenu<InventoryMenu>(); menu) {
-            if (menu->GetRuntimeData().itemList->items.size() > a_index) {
-                auto* item = menu->GetRuntimeData().itemList->items[a_index];
-                if (item && item->data.objDesc->object) {
-                    return item->data.objDesc->object;
-                }
-            }
+InventoryEntryData* GetEntryDataAtIndex(int index) {
+    if (auto menu = UI::GetSingleton()->GetMenu<InventoryMenu>().get()) {
+        auto items = menu->GetRuntimeData().itemList->items;
+        if (index < items.size() && index >= 0) {
+            return items[index]->data.objDesc;
         }
     }
     return nullptr;
+}
+
+bool SetOwnerOfIndex(StaticFunctionTag*, int index, TESForm* owner) {
+    if (!owner) return false;
+    auto entryData = GetEntryDataAtIndex(index);
+    if (!entryData) return false;
+    auto extraLists = entryData->extraLists;
+    if (extraLists) {
+        for (auto& xList : *extraLists) {
+            xList->SetOwner(owner);
+        }
+    }
+
+    return true;
+}
+
+TESForm* GetOwnerOfIndex(StaticFunctionTag*, int index) {
+    auto entryData = GetEntryDataAtIndex(index);
+    if (!entryData) return {};
+    auto extraLists = entryData->extraLists;
+    if (extraLists) {
+        for (auto& xList : *extraLists) {
+            auto owner = xList ? xList->GetOwner() : nullptr;
+            if (owner) {
+                return owner;
+            }
+        }
+    }
+    return {};
+}
+
+int GetItemCountAtIndex(StaticFunctionTag*, int index) {
+    if (auto menu = UI::GetSingleton()->GetMenu<InventoryMenu>().get()) {
+        auto items = menu->GetRuntimeData().itemList->items;
+        if (index < items.size() && index >= 0) {
+            return items[index]->data.GetCount();
+        }
+    }
+    return 1;
+}
+
+#undef GetObject
+
+TESForm* GetFormAtIndex(StaticFunctionTag*, int index) {
+    if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        return entryData->GetObject();
+    }
+    return {};
+}
+
+std::string GetFormEditorIDAtIndex(StaticFunctionTag*, int index) {
+    if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        return clib_util::editorID::get_editorID(entryData->GetObject());
+    }
+    return "";
+}
+
+void UpdateInventoryMenu(StaticFunctionTag*) {
+    RE::SendUIMessage::SendInventoryUpdateMessage(PlayerCharacter::GetSingleton(), nullptr);
 }
 
 bool PapyrusBinder(BSScript::IVirtualMachine* vm) {
@@ -46,7 +102,12 @@ bool PapyrusBinder(BSScript::IVirtualMachine* vm) {
     vm->RegisterFunction("OpenMenu", scriptName, OpenMenu);
     vm->RegisterFunction("CloseMenu", scriptName, CloseMenu);
     vm->RegisterFunction("GetSpellByIndex", scriptName, GetSpellByIndex);
-    vm->RegisterFunction("GetItemByIndex", scriptName, GetItemByIndex);
+    vm->RegisterFunction("GetFormAtIndex", scriptName, GetFormAtIndex);
+    vm->RegisterFunction("SetOwnerOfIndex", scriptName, SetOwnerOfIndex);
+    vm->RegisterFunction("GetOwnerOfIndex", scriptName, GetOwnerOfIndex);
+    vm->RegisterFunction("GetItemCountAtIndex", scriptName, GetItemCountAtIndex);
+    vm->RegisterFunction("GetFormEditorIDAtIndex", scriptName, GetFormEditorIDAtIndex);
+    vm->RegisterFunction("UpdateInventoryMenu", scriptName, UpdateInventoryMenu);
 
     return false;
 }
