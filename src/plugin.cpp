@@ -51,7 +51,7 @@ SpellItem* GetSpellByIndex(StaticFunctionTag*, int a_index) {
     return nullptr;
 }
 
-bool SetOwnerOfIndex(StaticFunctionTag*, int index, TESForm* owner) {
+bool SetEntryOwner(StaticFunctionTag*, int index, TESForm* owner) {
     if (!owner) return false;
     auto entryData = GetEntryDataAtIndex(index);
     if (!entryData) return false;
@@ -65,7 +65,7 @@ bool SetOwnerOfIndex(StaticFunctionTag*, int index, TESForm* owner) {
     return true;
 }
 
-TESForm* GetOwnerOfIndex(StaticFunctionTag*, int index) {
+TESForm* GetEntryOwner(StaticFunctionTag*, int index) {
     auto entryData = GetEntryDataAtIndex(index);
     if (!entryData) return {};
     auto extraLists = entryData->extraLists;
@@ -80,7 +80,7 @@ TESForm* GetOwnerOfIndex(StaticFunctionTag*, int index) {
     return {};
 }
 
-int GetItemCountAtIndex(StaticFunctionTag*, int index) {
+int GetEntryCount(StaticFunctionTag*, int index) {
     if (auto menu = UI::GetSingleton()->GetMenu<InventoryMenu>().get()) {
         auto items = menu->GetRuntimeData().itemList->items;
         if (index < items.size() && index >= 0) {
@@ -90,7 +90,7 @@ int GetItemCountAtIndex(StaticFunctionTag*, int index) {
     return 1;
 }
 
-int CountStolenAtIndex(StaticFunctionTag*, int index) {
+int GetEntryStolenCount(StaticFunctionTag*, int index) {
     auto entryData = GetEntryDataAtIndex(index);
     if (!entryData) return 0;
     int total = 0;
@@ -109,35 +109,35 @@ int CountStolenAtIndex(StaticFunctionTag*, int index) {
 
 #undef GetObject
 
-TESForm* GetFormAtIndex(StaticFunctionTag*, int index) {
+TESForm* GetEntryForm(StaticFunctionTag*, int index) {
     if (auto entryData = GetEntryDataAtIndex(index); entryData) {
         return entryData->GetObject();
     }
     return {};
 }
 
-std::string GetFormEditorIDAtIndex(StaticFunctionTag*, int index) {
+std::string GetEntryEditorID(StaticFunctionTag*, int index) {
     if (auto entryData = GetEntryDataAtIndex(index); entryData) {
         return clib_util::editorID::get_editorID(entryData->GetObject());
     }
     return "";
 }
 
-std::string GetItemNameAtIndex(StaticFunctionTag*, int index) {
+std::string GetEntryName(StaticFunctionTag*, int index) {
     if (auto entryData = GetEntryDataAtIndex(index); entryData) {
         return entryData->GetDisplayName();
     }
     return "";
 }
 
-EnchantmentItem* GetItemEnchantmentAtIndex(StaticFunctionTag*, int index) {
+EnchantmentItem* GetEntryEnchantment(StaticFunctionTag*, int index) {
     if (auto entryData = GetEntryDataAtIndex(index); entryData) {
         return entryData->GetEnchantment();
     }
     return {};
 }
 
-int GetItemChargeAtIndex(StaticFunctionTag*, int index) {
+int GetEntryCharge(StaticFunctionTag*, int index) {
     if (auto entryData = GetEntryDataAtIndex(index); entryData) {
         auto charge = entryData->GetEnchantmentCharge();
         if (charge.has_value()) return charge.value();
@@ -145,7 +145,7 @@ int GetItemChargeAtIndex(StaticFunctionTag*, int index) {
     return 0;
 }
 
-AlchemyItem* GetAppliedPoisonOnItemAtIndex(StaticFunctionTag*, int index) {
+AlchemyItem* GetEntryAppliedPoison(StaticFunctionTag*, int index) {
     if (auto entryData = GetEntryDataAtIndex(index); entryData) {
         if (auto poisonData = GetExtraDataByType<ExtraPoison>(entryData); poisonData) {
             return poisonData->poison;
@@ -154,7 +154,7 @@ AlchemyItem* GetAppliedPoisonOnItemAtIndex(StaticFunctionTag*, int index) {
     return {};
 }
 
-int GetAppliedPoisonCountOnItemAtIndex(StaticFunctionTag*, int index) {
+int GetEntryPoisonCount(StaticFunctionTag*, int index) {
     if (auto entryData = GetEntryDataAtIndex(index); entryData) {
         if (auto poisonData = GetExtraDataByType<ExtraPoison>(entryData); poisonData) {
             return poisonData->count;
@@ -163,13 +163,47 @@ int GetAppliedPoisonCountOnItemAtIndex(StaticFunctionTag*, int index) {
     return 0;
 }
 
-float GetItemHealthAtIndex(StaticFunctionTag*, int index) {
+float GetEntryHealth(StaticFunctionTag*, int index) {
     if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        if (!entryData->GetObject()->Is(FormType::Weapon) && !entryData->GetObject()->Is(FormType::Armor)) return 0.0f;
         if (auto healthData = GetExtraDataByType<ExtraHealth>(entryData); healthData) {
             return healthData->health;
         }
     }
     return 1.0f;
+}
+
+void SetEntryHealth(StaticFunctionTag*, int index, float value) {
+    if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        if (!entryData->GetObject()->Is(FormType::Weapon) && !entryData->GetObject()->Is(FormType::Armor)) return;
+
+        if (auto healthData = GetExtraDataByType<ExtraHealth>(entryData); healthData) {
+            healthData->health = value;
+        } else {
+            // ?
+        }
+    }
+}
+
+bool IsEntryEquipped(StaticFunctionTag*, int index) {
+    if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        return entryData->IsWorn();
+    }
+    return false;
+}
+
+bool IsEntryFavorited(StaticFunctionTag*, int index) {
+    if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        return entryData->IsFavorited();
+    }
+    return false;
+}
+
+bool IsEntryQuestObject(StaticFunctionTag*, int index) {
+    if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        return entryData->IsQuestObject();
+    }
+    return false;
 }
 
 void UpdateInventoryMenu(StaticFunctionTag*) {
@@ -182,19 +216,23 @@ bool PapyrusBinder(BSScript::IVirtualMachine* vm) {
     vm->RegisterFunction("OpenMenu", scriptName, OpenMenu);
     vm->RegisterFunction("CloseMenu", scriptName, CloseMenu);
     vm->RegisterFunction("GetSpellByIndex", scriptName, GetSpellByIndex);
-    vm->RegisterFunction("GetFormAtIndex", scriptName, GetFormAtIndex);
-    vm->RegisterFunction("SetOwnerOfIndex", scriptName, SetOwnerOfIndex);
-    vm->RegisterFunction("GetOwnerOfIndex", scriptName, GetOwnerOfIndex);
-    vm->RegisterFunction("CountStolenAtIndex", scriptName, CountStolenAtIndex);
-    vm->RegisterFunction("GetItemCountAtIndex", scriptName, GetItemCountAtIndex);
-    vm->RegisterFunction("GetFormEditorIDAtIndex", scriptName, GetFormEditorIDAtIndex);
-    vm->RegisterFunction("GetItemNameAtIndex", scriptName, GetItemNameAtIndex);
-    vm->RegisterFunction("GetItemEnchantmentAtIndex", scriptName, GetItemEnchantmentAtIndex);
-    vm->RegisterFunction("GetItemChargeAtIndex", scriptName, GetItemChargeAtIndex);
-    vm->RegisterFunction("GetAppliedPoisonOnItemAtIndex", scriptName, GetAppliedPoisonOnItemAtIndex);
-    vm->RegisterFunction("GetAppliedPoisonCountOnItemAtIndex", scriptName, GetAppliedPoisonCountOnItemAtIndex);
-    vm->RegisterFunction("GetItemHealthAtIndex", scriptName, GetItemHealthAtIndex);
-    vm->RegisterFunction("UpdateInventoryMenu", scriptName, UpdateInventoryMenu);
+    vm->RegisterFunction("GetEntryForm", scriptName, GetEntryForm);
+    vm->RegisterFunction("SetEntryOwner", scriptName, SetEntryOwner);
+    vm->RegisterFunction("GetEntryOwner", scriptName, GetEntryOwner);
+    vm->RegisterFunction("GetEntryStolenCount", scriptName, GetEntryStolenCount);
+    vm->RegisterFunction("GetEntryCount", scriptName, GetEntryCount);
+    vm->RegisterFunction("GetEntryEditorID", scriptName, GetEntryEditorID);
+    vm->RegisterFunction("GetEntryName", scriptName, GetEntryName);
+    vm->RegisterFunction("GetEntryEnchantment", scriptName, GetEntryEnchantment);
+    vm->RegisterFunction("GetEntryCharge", scriptName, GetEntryCharge);
+    vm->RegisterFunction("GetEntryAppliedPoison", scriptName, GetEntryAppliedPoison);
+    vm->RegisterFunction("GetEntryPoisonCount", scriptName, GetEntryPoisonCount);
+    vm->RegisterFunction("GetEntryHealth", scriptName, GetEntryHealth);
+    // vm->RegisterFunction("SetItemHealthAtIndex", scriptName, SetItemHealthAtIndex);
+    vm->RegisterFunction("IsEntryEquipped", scriptName, IsEntryEquipped);
+    vm->RegisterFunction("IsEntryFavorited", scriptName, IsEntryFavorited);
+    vm->RegisterFunction("IsEntryQuestObject", scriptName, IsEntryQuestObject);
+    vm->RegisterFunction("_UpdateInventoryMenu", scriptName, UpdateInventoryMenu);
 
     return false;
 }

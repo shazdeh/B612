@@ -39,6 +39,12 @@ Int Property IsEnchanted = -1 Auto
 0 : show only unenchanted gear
 1 : only display enchanted gear
 }
+Int Property IsStolen = -1 Auto
+{Filter by weather the item is stolen or not:
+-1 : default, shows both
+0 : show only items not stolen
+1 : only display stolen items
+}
 
 Form Function Show()
     SelectedForm = None
@@ -73,6 +79,9 @@ Form Function Show()
     If IsEnchanted != -1
         UI.InvokeInt(sParentMenu, sMenuRoot + ".setIsEnchanted", IsEnchanted)
     EndIf
+    If IsStolen != -1
+        UI.InvokeInt(sParentMenu, sMenuRoot + ".setIsStolen", IsStolen)
+    EndIf
 
     UI.Invoke(sParentMenu, sMenuRoot + ".render")
 
@@ -85,7 +94,7 @@ EndFunction
 ; @param strArg Item Name
 ; @param numArg Index of item inside InventoryMenu
 Event OnSelect(string eventName, string strArg, float numArg, Form formArg)
-    SelectedForm = GetFormAtIndex(numArg as Int)
+    SelectedForm = GetEntryForm(numArg as Int)
     If bAutoClose
         CloseMenu(sParentMenu)
     EndIf

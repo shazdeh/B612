@@ -21,6 +21,7 @@ class ItemSelect extends MovieClip {
     private var ArmorRatingCompare:String = '=';
     private var EquipState:Number = -1;
     private var IsEnchanted:Boolean = undefined;
+    private var IsStolen:Boolean = undefined;
 
     private var mustCheckKeywords:Boolean;
 
@@ -68,15 +69,16 @@ class ItemSelect extends MovieClip {
 
     function RemoveUnwantedItems() {
         for ( var i in itemList._entryList ) {
-        ShazdehUtils.LogObject(itemList._entryList[i]);
+            var item = itemList._entryList[i];
             if (
-                (mustCheckKeywords && checkKeywords(itemList._entryList[i].keywords))
-                || (FormTypes.length && checkFormTypes(itemList._entryList[i].formType))
-                || (EquipState !== -1 && itemList._entryList[i].equipState === EquipState)
-                || (IsEnchanted !== undefined && itemList._entryList[i].isEnchanted === IsEnchanted)
-                || (Count !== 0 && checkCount(itemList._entryList[i].count))
-                || (Damage !== 0 && checkDamage(itemList._entryList[i].damage))
-                || (ArmorRating !== 0 && checkArmorRating(itemList._entryList[i].armor))
+                (mustCheckKeywords && checkKeywords(item.keywords))
+                || (FormTypes.length && checkFormTypes(item.formType))
+                || (EquipState !== -1 && item.equipState === EquipState)
+                || (IsEnchanted !== undefined && item.isEnchanted === IsEnchanted)
+                || (Count !== 0 && checkCount(item.count))
+                || (Damage !== 0 && checkDamage(item.damage))
+                || (ArmorRating !== 0 && checkArmorRating(item.armor))
+                || (IsStolen !== undefined && item.isStolen === IsStolen)
             ) {
                 delete itemList._entryList[ i ];
             }
@@ -189,6 +191,11 @@ class ItemSelect extends MovieClip {
     // @api
     function setIsEnchanted(a_value:Number) {
         IsEnchanted = !a_value;
+    }
+
+    // @api
+    function setIsStolen(a_value:Number) {
+        IsStolen = !a_value;
     }
 
     // @api
