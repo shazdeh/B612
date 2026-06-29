@@ -99,3 +99,16 @@ Event OnSelect(string eventName, string strArg, float numArg, Form formArg)
         CloseMenu(sParentMenu)
     EndIf
 EndEvent
+
+; Drops the currently highlighted item
+Function DropItem(Int aiAmount = 1)
+    UI.InvokeInt(sParentMenu, sMenuRoot + ".drop", aiAmount)
+EndFunction
+
+; Equip currently highlighted item
+; Valid Hand Slot:
+; 0 - Left
+; 1 - Right
+Function AttemptEquip(Int aiHandSlot = 1)
+    UI.InvokeInt(sParentMenu, sMenuRoot + ".equip", aiHandSlot)
+EndFunction

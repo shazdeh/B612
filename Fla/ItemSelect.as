@@ -1,4 +1,5 @@
-﻿import skse;
+﻿import gfx.io.GameDelegate;
+import skse;
 import ShazdehUtils;
 
 class ItemSelect extends MovieClip {
@@ -203,5 +204,25 @@ class ItemSelect extends MovieClip {
         itemList.InvalidateData();
 
         inventoryLists._visible = true;
+    }
+
+    // @api
+    function drop(a_count:Number) {
+        if (!a_count) a_count = 1;
+        Menu_mc.onQuantityMenuSelect({amount: a_count});
+    }
+
+    // @api
+    function equip(a_slot:Number) {
+        // slots are flipped, this is so it matches WornObject.psc convention
+        if (a_slot === 1) {
+            a_slot = 0;
+        } else {
+            a_slot = 1;
+        }
+        var bCheckOverList:Boolean = true;
+        if (Menu_mc.shouldProcessItemsListInput(bCheckOverList) && Menu_mc.confirmSelectedEntry()) {
+			GameDelegate.call("ItemSelect", [a_slot]);
+        }
     }
 }
