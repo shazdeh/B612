@@ -13,7 +13,7 @@ String[] Property IncludeKeywords Auto
 String[] Property ExcludeKeywords Auto
 {Has priority over IncludeKeywords, will exclude spells that have any of the listed keywords}
 Int[] Property FormTypes Auto
-{List of FormType(s) allowed; check FormType script for valid values.}
+{List of FormType(s) allowed; check FormType.psc script in SKSE for valid values; example: 41 is Weapon, 46 is Potion.}
 Int Property Count Auto
 {Filter by how many of the item the player has}
 String Property CountCompare = "=" Auto
