@@ -43,6 +43,12 @@ EndFunction
 ; returns percentage (0-100) of how much charge the item has
 Int Function GetEntryCharge(Int aiIndex) Global Native
 
+Float Function GetEntryMaxCharge(Int aiIndex) Global Native
+
+Float Function GetEntryCurrentCharge(Int aiIndex) Global Native
+
+Function ModEntryCharge(Int aiIndex, Float aiValue) Global Native
+
 Potion Function GetEntryAppliedPoison(Int aiIndex) Global Native
 
 Bool Function IsEntryPoisoned(Int aiIndex) Global

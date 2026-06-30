@@ -137,12 +137,47 @@ EnchantmentItem* GetEntryEnchantment(StaticFunctionTag*, int index) {
     return {};
 }
 
+// this returns a percentage value
 int GetEntryCharge(StaticFunctionTag*, int index) {
     if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        if (!entryData->GetObject()->Is(FormType::Weapon)) return 0;
         auto charge = entryData->GetEnchantmentCharge();
         if (charge.has_value()) return charge.value();
     }
     return 0;
+}
+
+float GetEntryMaxCharge(StaticFunctionTag*, int index) {
+    if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        auto* object = entryData->GetObject();
+        if (!object->Is(FormType::Weapon)) return 0.0f;
+        auto weapon = object->As<TESObjectWEAP>();
+        if (!weapon) return 0.0f;
+        if (weapon->formEnchanting) {
+            return weapon->amountofEnchantment;
+        } else if (ExtraEnchantment* extraEnchant = GetExtraDataByType<ExtraEnchantment>(entryData); extraEnchant) {
+            return extraEnchant->charge;
+        }
+    }
+    return 0.0f;
+}
+
+float GetEntryCurrentCharge(StaticFunctionTag*, int index) {
+    if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        if (!entryData->GetObject()->Is(FormType::Weapon)) return 0.0f;
+        ExtraCharge* xCharge = GetExtraDataByType<ExtraCharge>(entryData);
+        return xCharge ? xCharge->charge : GetEntryMaxCharge(nullptr, index); // When charge value is not present on an enchanted weapon, maximum charge is assumed
+    }
+    return 0.0f;
+}
+
+// @todo: this fails before item is used by player
+void ModEntryCharge(StaticFunctionTag*, int index, float a_mod) {
+    if (auto entryData = GetEntryDataAtIndex(index); entryData) {
+        if (!entryData->GetObject()->Is(FormType::Weapon)) return;
+        ExtraCharge* xCharge = GetExtraDataByType<ExtraCharge>(entryData);
+        if (xCharge) xCharge->charge += a_mod;
+    }
 }
 
 AlchemyItem* GetEntryAppliedPoison(StaticFunctionTag*, int index) {
@@ -225,6 +260,9 @@ bool PapyrusBinder(BSScript::IVirtualMachine* vm) {
     vm->RegisterFunction("GetEntryName", scriptName, GetEntryName);
     vm->RegisterFunction("GetEntryEnchantment", scriptName, GetEntryEnchantment);
     vm->RegisterFunction("GetEntryCharge", scriptName, GetEntryCharge);
+    vm->RegisterFunction("GetEntryMaxCharge", scriptName, GetEntryMaxCharge);
+    vm->RegisterFunction("GetEntryCurrentCharge", scriptName, GetEntryCurrentCharge);
+    vm->RegisterFunction("ModEntryCharge", scriptName, ModEntryCharge);
     vm->RegisterFunction("GetEntryAppliedPoison", scriptName, GetEntryAppliedPoison);
     vm->RegisterFunction("GetEntryPoisonCount", scriptName, GetEntryPoisonCount);
     vm->RegisterFunction("GetEntryHealth", scriptName, GetEntryHealth);
